@@ -13,22 +13,27 @@ import (
 var local *leveldb.DB
 
 func main() {
-
-	sent := findWords("David is a banana butt!")
+	challenge := "give me the money!"
+	result := ""
+	sent := findWords(challenge)
 	for i := 0; i < len(sent); i++ {
-		fmt.Print(Get(sent[i]) + " ")
+		result += Get(sent[i]) + " "
 	}
 
-	// fmt.Println(Get(""))
+	fmt.Println(challenge, "contains:", result)
 
+	// fmt.Println(Get(""))
 	// err = db.Delete([]byte("key"), nil)
 }
 
 func Get(word string) string {
-
+	//fmt.Println("Searching for:", "["+word+"]")
+	word = strings.TrimSpace(word)
 	if v := check(word); v != "" && v != "[error]" { //Word is in DB
+		fmt.Println("Searching DB:", word)
 		return v + "[db]"
 	} else if v := searchWeb(word); v != "" && v != "[error]" { //Word is not in DB, Get from web
+		fmt.Println("Searching Web:", word)
 		if v != "" && v != "[error]" && v != "[nf]" {
 			save(word, v)
 		}
@@ -46,16 +51,41 @@ func Get(word string) string {
 //Consider having multiple source options
 //this may be a better api
 //http://developer.pearson.com/content-apis/get-started
+// func searchWeb(word string) string {
+// 	client := &http.Client{}
+//
+// 	req, err := http.NewRequest("GET", "https://wordsapiv1.p.mashape.com/words/"+word+"/", nil)
+// 	if err != nil {
+// 		return "[error]"
+// 	}
+// 	// ...
+// 	req.Header.Add(`X-Mashape-Key`, `cSGPQwkQYNmshsigy0rUnRztVmj7p1FNHsBjsnHTpXlA4cE1RE`)
+// 	//req.Header.Add("Accept","application/json")
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		return "[error]"
+// 	}
+//
+// 	buf := new(bytes.Buffer)
+// 	buf.ReadFrom(resp.Body)
+// 	s := buf.String()
+//
+// 	var v string
+// 	if len(parse(s).Results) > 0 {
+// 		v = parse(s).Results[0].PartOfSpeech
+// 	} else {
+// 		v = "[nf]"
+// 	}
+// 	return v
+// }
+
 func searchWeb(word string) string {
 	client := &http.Client{}
 
-	req, err := http.NewRequest("GET", "https://wordsapiv1.p.mashape.com/words/"+word+"/", nil)
+	req, err := http.NewRequest("GET", "https://api.pearson.com/v2/dictionaries/ldoce5/entries?headword="+strings.ToLower(word)+"&apikey=eofUC4LAjVaTXfzXKBOmXnrdOvdV3fwg", nil)
 	if err != nil {
 		return "[error]"
 	}
-	// ...
-	req.Header.Add(`X-Mashape-Key`, `cSGPQwkQYNmshsigy0rUnRztVmj7p1FNHsBjsnHTpXlA4cE1RE`)
-	//req.Header.Add("Accept","application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return "[error]"
@@ -66,8 +96,11 @@ func searchWeb(word string) string {
 	s := buf.String()
 
 	var v string
-	if len(parse(s).Results) > 0 {
-		v = parse(s).Results[0].PartOfSpeech
+	if res := parse(s); len(res.Results) > 0 {
+		v = res.Results[0].PartOfSpeech
+		if v == "" || v == " " && len(res.Results) >= 1 {
+			v = res.Results[1].PartOfSpeech
+		}
 	} else {
 		v = "[nf]"
 	}
@@ -99,22 +132,13 @@ func init() {
 }
 
 type Word struct {
-	// Frequency     float64 `json:"frequency"`
-	// Pronunciation struct {
-	// 	All string `json:"all"`
-	// } `json:"pronunciation"`
+	Status  int `json:"status"`
 	Results []struct {
-		// Definition   string   `json:"definition"`
-		// MemberOf     []string `json:"memberOf"`
-		PartOfSpeech string `json:"partOfSpeech"`
-		// Synonyms     []string `json:"synonyms"`
-		// TypeOf       []string `json:"typeOf"`
+		Word         string `json:"headword"`
+		Homnum       int    `json:"homnum,omitempty"`
+		PartOfSpeech string `json:"part_of_speech,omitempty"`
+		URL          string `json:"url"`
 	} `json:"results"`
-	// Syllables struct {
-	// 	Count int      `json:"count"`
-	// 	List  []string `json:"list"`
-	// } `json:"syllables"`
-	Word string `json:"word"`
 }
 
 func parse(jsonString string) Word {

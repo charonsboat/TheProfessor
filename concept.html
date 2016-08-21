@@ -1,0 +1,13 @@
+<html><p>The idea is to use "perceptions", or better yet a network of them to evaluate a sentence. Each perception takes in many inputs such as capitalization, position, part of speech, punctuation,
+and the position of other words etc and returns a single output called a weight. The weight describes how close this word is to the goal in using a value 0-255. Next is the network. I used
+a struct and a couple functions to make a "perception engine". The engine creates a perception for each word & assigns that perception a word, as well as works as a reference for getting
+information to a perception (for example, I didn't pass anything but the word to the perceptions, so if they need to get info about the sentence, they get it from the engine). Once the 
+engine has created and activated each perception it then processes the dataset now available (this is where adaptation/learning comes in). The engine has a min and 
+max value designed to work as a filter, this filter is a group perception processing each word within the context of the sentence. From there the values are returned to the user for
+validation. If the value is correct the filter will remain the same however, if the value was incorrect the value will be flagged for the machine to determine which weight filter to modify
+(min or max?). The problem with this idea would be that the min/max could only go so far, and the program has to remain running for the intelligence to remain viable unless we incorporate
+a db for persistence between runs (long term memory). Regardless, this algorithm could only go so far, Eventually (if not from the getgo) the values would consistancely change based on 
+information the machine is fed but the results would not be perfect because the perceptions are the problem (because they are not dynamic). This leads me to believe that we may need to 
+develop a weight system for the perceptions themselves, a better detection 
+algorithm or a way for the machine to modify perceptions (especially important considering perception does most of the work, and is the primary asset for a machine to learn). 
+On a side note, this is a supervised learning neural network (actual term, Google it!), sorry about the crappy formatting of this file.... </p></html>

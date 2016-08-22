@@ -13,32 +13,53 @@ import (
 var local *leveldb.DB
 
 func main() {
-	challenge := "give me the money!"
+	challenge := "no one else will ever know what happend"
 	result := ""
 	sent := findWords(challenge)
 	for i := 0; i < len(sent); i++ {
 		result += Get(sent[i]) + " "
 	}
 
-	fmt.Println(challenge, "contains:", result)
+	fmt.Println("\""+challenge+"\"", "contains:", result)
 
 	// fmt.Println(Get(""))
 	// err = db.Delete([]byte("key"), nil)
 }
+
+func List() {
+	iter := db.NewIterator(nil, nil)
+	for iter.Next() {
+		// Remember that the contents of the returned slice should not be modified, and
+		// only valid until the next call to Next.
+		key := iter.Key()
+		value := iter.Value()
+		fmt.Println(string(key), ";", string(value))
+	}
+	iter.Release()
+
+}
+
+// func BatchWrite() {
+// 	batch := new(leveldb.Batch)
+// batch.Put([]byte("foo"), []byte("value"))
+// batch.Put([]byte("bar"), []byte("another value"))
+// batch.Delete([]byte("baz"))
+// err = db.Write(batch, nil)
+// }
 
 func Get(word string) string {
 	//fmt.Println("Searching for:", "["+word+"]")
 	word = strings.TrimSpace(word)
 	if v := check(word); v != "" && v != "[error]" { //Word is in DB
 		fmt.Println("Searching DB:", word)
-		return v + "[db]"
+		return "[" + v + "]" + "[db]"
 	} else if v := searchWeb(word); v != "" && v != "[error]" { //Word is not in DB, Get from web
 		fmt.Println("Searching Web:", word)
 		if v != "" && v != "[error]" && v != "[nf]" {
 			save(word, v)
 		}
 
-		return v
+		return "[" + v + "]"
 		// v := searchWeb(word)
 		// if v != "" || v != "[error]" {
 		// 	return v
@@ -46,38 +67,6 @@ func Get(word string) string {
 	}
 	return ""
 }
-
-//THIS IS CAUSING ISSUES!!!!
-//Consider having multiple source options
-//this may be a better api
-//http://developer.pearson.com/content-apis/get-started
-// func searchWeb(word string) string {
-// 	client := &http.Client{}
-//
-// 	req, err := http.NewRequest("GET", "https://wordsapiv1.p.mashape.com/words/"+word+"/", nil)
-// 	if err != nil {
-// 		return "[error]"
-// 	}
-// 	// ...
-// 	req.Header.Add(`X-Mashape-Key`, `cSGPQwkQYNmshsigy0rUnRztVmj7p1FNHsBjsnHTpXlA4cE1RE`)
-// 	//req.Header.Add("Accept","application/json")
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		return "[error]"
-// 	}
-//
-// 	buf := new(bytes.Buffer)
-// 	buf.ReadFrom(resp.Body)
-// 	s := buf.String()
-//
-// 	var v string
-// 	if len(parse(s).Results) > 0 {
-// 		v = parse(s).Results[0].PartOfSpeech
-// 	} else {
-// 		v = "[nf]"
-// 	}
-// 	return v
-// }
 
 func searchWeb(word string) string {
 	client := &http.Client{}
@@ -102,13 +91,13 @@ func searchWeb(word string) string {
 			v = res.Results[1].PartOfSpeech
 		}
 	} else {
-		v = "[nf]"
+		v = "nf"
 	}
 	return v
 }
 
 func save(word, pos string) {
-	fmt.Println("[save{" + word + ":" + pos + "}]")
+	fmt.Println("[save{" + strings.ToLower(word) + ":" + pos + "}]")
 	db.Put([]byte(word), []byte(pos), nil)
 }
 

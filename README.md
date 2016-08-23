@@ -6,10 +6,10 @@ An attempt at a supervised learning neural network implemention for solving word
 
 ***
 
-###Contributers
+###Authors
 
-* David Myers  |  @Drm2
-* Seth Moeckel |  @Digitalblueeye
+* Seth Moeckel - [@Digitalblueeye](https://github.com/digitalblueeye)
+* David R. Myers II - [@drm2](https://github.com/drm2)
 
 ***
 
